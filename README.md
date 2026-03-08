@@ -1,0 +1,2 @@
+# ai-audit-trail
+In highly regulated environments (Healthcare, Finance), you cannot simply let applications talk to an LLM without an immutable record. This project acts as an API interceptor built in Python. It sits between the user and the LLM, catching the request, hashing it with SHA-256 to prove it was never altered, logging the metadata (user ID, token count) to a database, and then forwarding it to the LLM.
