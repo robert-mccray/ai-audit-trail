@@ -14,7 +14,6 @@ class AIRequest(BaseModel):
 
 @app.post("/generate")
 async def proxy_generate(request: AIRequest):
-    # 1. Forward the request to your local Ollama instance
     ollama_url = "http://localhost:11434/api/generate"
     payload = {
         "model": "llama3",
@@ -28,18 +27,16 @@ async def proxy_generate(request: AIRequest):
         ai_data = response.json()
         ai_response = ai_data.get("response", "")
 
-        # 2. Extract metadata (In a real app, you'd calculate actual token usage.)
         token_estimate = len(request.prompt.split()) + len(ai_response.split())
 
-        # 3. Create the Imuttable Audit Log
-        audit_sig = database = database.log_interaction(
+        # FIX: Removed the extra 'database =' which was shadowing the module
+        audit_sig = database.log_interaction(
             user_id=request.user_id,
             prompt=request.prompt,
             response=ai_response,
             tokens=token_estimate
         )
 
-        # 4. Return the AI response along with the Audit Signature for transparency
         return {
             "status": "logged_and_verified",
             "audit_signature": audit_sig,
@@ -47,8 +44,11 @@ async def proxy_generate(request: AIRequest):
         }
     
     except Exception as e:
+        # This will now print the actual error to your terminal for debugging
+        print(f"Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
     
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    # Using 8085 as discussed to avoid Windows port conflicts
+    uvicorn.run(app, host="0.0.0.0", port=8085)

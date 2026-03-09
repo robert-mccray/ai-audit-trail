@@ -8,13 +8,14 @@ DB_NAME = "audit_ledger.db"
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+    # Standardized to audit_logs (plural) and fixed 'repsonse' spelling
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS audit_log (
+        CREATE TABLE IF NOT EXISTS audit_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
             user_id TEXT,
             prompt TEXT,
-            repsonse TEXT,
+            response TEXT,
             token_count INTEGER,
             audit_hash TEXT
         )
@@ -23,14 +24,13 @@ def init_db():
     conn.close()
 
 def generate_hash(data_dict):
-    # Sort keys to ensure the hash is deterministic
     encoded_data = json.dumps(data_dict, sort_keys=True).encode('utf-8')
     return hashlib.sha256(encoded_data).hexdigest()
 
 def log_interaction(user_id, prompt, response, tokens):
-    timestamp = datatime.utcnow().isoformat()
+    # Fixed typo: datetime
+    timestamp = datetime.utcnow().isoformat()
 
-    # The dta we want to make immutable
     record = {
         "timestamp": timestamp,
         "user_id": user_id,
@@ -38,7 +38,6 @@ def log_interaction(user_id, prompt, response, tokens):
         "response": response
     }
 
-    # Create the cryptographic signature
     audit_hash = generate_hash(record)
 
     conn = sqlite3.connect(DB_NAME)
@@ -53,4 +52,4 @@ def log_interaction(user_id, prompt, response, tokens):
 
 if __name__ == "__main__":
     init_db()
-    print(" Audit Ledger Initialized.")
+    print("✅ Audit Ledger Initialized.")
